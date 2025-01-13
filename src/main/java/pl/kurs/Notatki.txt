@@ -1,0 +1,217 @@
+Wyrzucenie wyjątku – jest to sytuacja wyjątkowa, która może wywołać awarię programu
+ np. poprzez podanie nieprawidłowych danych na wejściu. Do obsługi tych zdarzeń służy technika obsługi wyjątków.
+
+Klasyfikacja wyjątków:
+Wyjątki to obiekty. Typ obiektu wyjątku w Javie jest zawsze pochodną klasy Throwable.
+
+Wszystkie wyjątki są potomkami klasy  Throwable. Hierarchia tych potomków dzieli się na typy Error oraz Exception.
+
+Klasy dziedziczące po Error: odpowiadają błędom wewnętrznym i wyczerpaniu zasobów w środowisku uruchomieniowym
+(StackOverflowError, OutOfMemoryError), nie wyrzuca się tych błędów poprzez instrukcję throw oraz się ich nie obsługuje.
+Występują one rzadko.
+
+Klasy dziedziczące po Exception: dzielą się na RuntimeException (wyjątki wykonawcze (nie powinno się ich obsługiwać),
+związane z wykonywaniem np. NullPointerException, ClassCastException, ArrayIndexOutOfBoundException.:), oraz pozostałe.
+Ogólna zasada mówi: wyjątek RuntimeException oraz wyjątki dziedziczące po nim są spowodowane przez błędy implementacyjne programisty.
+
+ Wszystkie pozostałe wyjątki dziedziczące po Exception mają związek z innymi niepożądanymi zdarzeniami
+  np. błędy wejścia-wyjścia, które mogą wystąpić w prawidłowo zaimplementowanym programie.
+
+Klasyfikacja ze względu na kontrolowane/niekontrolowane (checked/unchecked):
+Niekontrolowane: RuntimeException, Error i wszystkie dziedziczące po nich;
+Kontrolowane: wszystkie pozostałe.
+
+Obsługa wyjątku za pomocą try-catch jest to sposób na zakończenie działania metody w przypadku napotkanego problemu
+bez przerywania działania całego programu.
+
+Od javy 7 mamy dostępny blok finally, czyli blok który wykona się zawsze, niezaleznie od tego czy instrukcja w try sie w pelni powiedzie
+badź zostanie rzucony i złapany wyjątek w sekcji catch
+
+} catch (InputMismatchException | ArrayIndexOutOfBoundsException e) {
+    System.err.println("Błędne dane!");
+    e.printStackTrace();
+} finally {
+    scanner.close()
+}
+
+
+Try-catch z zasobami (w zasobach można zadeklarować i zainicjalizować tylko obiekty klas implementujących interfejs
+AutoCloseable lub jakikolwiek dziedziczący po nim):
+try (
+        Scanner input = new Scanner(System.in);
+) {
+    System.out.println("Podaj Liczbę całkowitą:");
+    long inputNumber = input.nextLong();
+    System.out.println("Wprowadziłeś: " + inputNumber);
+} catch (InputMismatchException ex) {
+    System.err.println("Błąd wprowadzania danych!");
+}
+
+
+public class ElectricVehicle {
+
+    public static final double ELECTRICITY_CONSUMPTION = 5; // 5Ah na 100km
+    public static final double BATTERY_CAPACITY = 40; // Ah
+
+    private String producer;
+    private String model;
+    private double currentBatteryLevel;
+    //oraz konstruktor parametrowy
+
+
+    public void drive() {
+        if(currentBatteryLevel - ELECTRICITY_CONSUMPTION < 0)
+            System.out.println("Zbyt niski poziom energii, naładuj baterie!");
+        else
+            currentBatteryLevel = currentBatteryLevel - ELECTRICITY_CONSUMPTION;
+    }
+
+    public void recharge(double energyAmount) {
+        if(currentBatteryLevel + energyAmount > BATTERY_CAPACITY)
+            System.out.println("Wprowadzona ilość energii jest zbyt duża, zmieści się jeszcze: " + (BATTERY_CAPACITY - currentBatteryLevel));
+        else
+            currentBatteryLevel = currentBatteryLevel + energyAmount;
+    }
+}
+Metody drive() oraz recharge() uwzględniają sytuacje wyjątkowe za pomocą ifów, ale umieszczanie w ciałach ifów
+ wydruków do konsoli nie jest zgodne z dobrymi praktykami programowania.
+Zamiast tych soutów trzeba rzucić odpowiednie wyjątki np. dziedziczące po Exception
+
+Po zmianach:
+
+Metoda drive():
+if(currentBatteryLevel - ELECTRICITY_CONSUMPTION < 0)
+    //System.out.println("Zbyt niski poziom energii, naładuj baterie!");
+    throw new IllegalStateException("Zbyt niski poziom baterii. Należy je naładować!");
+
+Metoda recharge():
+if(currentBatteryLevel + energyAmount > BATTERY_CAPACITY)
+    //System.out.println("Wprowadzona ilość energii jest zbyt duża, zmieści się jeszcze: " + (BATTERY_CAPACITY - currentBatteryLevel));
+    throw new IllegalArgumentException("Wprowadzona ilość energii jest zbyt duża! Zmieści się jeszcze: " + (BATTERY_CAPACITY - currentBatteryLevel));
+
+Rzucenie wyjątku powoduje przerwanie wykonywania się metody i wyjście z niej do miejsca, w którym była ona wywołana.
+Metody mogą rzucać czyli zwracać obiekt wyjątku, niezależnie czy to metody return czy void.
+
+Teraz w klasie ElectricVehicleRunner testujemy nasze metody - musimy obsłużyć wyjątki (przechwycić):
+
+ElectricVehicle tesla = new ElectricVehicle("Tesla", "S", 20);
+try{
+    tesla.recharge(1000);
+} catch (IllegalArgumentException e) {
+    System.out.println(e.getMessage());
+}
+
+Praca domowa 1:
+- Przerobic projekt CarWarehouse tak aby rzucal wyjatki zamiast soutow
+
+Praca domowa 2:
+- Przerobic projekt Enum/Wizard tak aby rzucal wyjatki zamiast soutow, np. w sytuacji gdy martwy czarodziej probuje rzucic zaklecie
+
+Praca domowa 3:
+- Wyslac zalegle prace :(
+
+
+
+Tworzenie własnych klas wyjątków + deklarowanie wyjątków kontrolowanych (throws…)
+Jeżeli chcemy zgłosić pewien wyjątek w metodzie, do którego nie pasuje żadna ze standardowych klas wyjątków to
+wtedy tworzymy swoją własną klasę wyjątku, która dziedziczy po klasie Exception lub z jednej jej podklas, np. IOException.
+public class Car {
+
+    private String producer;
+    private String model;
+    private int power;
+    //konstruktor param., toString..
+}
+
+public class CarFactory {
+
+    public Car createBrandNewCar(String chosenCar) throws NoRecognizedCarException {
+
+        return switch (chosenCar) {
+            case "Lamborghini" -> new Car("Lamborghini", "Huracan", 610);
+            case "Ferrari" -> new Car("Ferrari", "458 Italia", 570);
+            default -> throw new NotRecognizedCarException("Nierozpoznano auta!");
+        };
+
+    }
+}
+W metodzie createBrandNewCar() zgłaszamy nasz własny wyjątek, który dziedziczy po klasie Exception.
+Ten nasz wyjątek jest wyjątkiem kontrolowanym, dlatego musimy zadeklarować go w nagłówku metody poprzez słowo throws.
+Nie ma potrzeby deklarowania w nagłówkach(metod) wyjątków niekontrolowanych np. IllegalArgumentException, NullPointerException itp.
+
+
+W nagłówku może znajdować się deklaracja kilku wyjątkonw kontrolowanych – wymienionych po przecinku np.:
+public Car createBrandNewCar(String chosenCar) throws NoRecognizedCarException, NoSupplyException {
+    //implementacja
+}
+
+
+Klasa CarRunner (podkreśla nam na czerwono metodę createBrandNewCar()):
+
+CarFactory factory = new CarFactory();
+Car myCar = factory.createBrandNewCar("Ferrari");
+
+Aby uruchomić kod należy obsłużyć za pomocą try-catch metodę createBrandNewCar()
+(ponieważ ta metoda informuje kompilator, że może rzucać wyjątek kontrolowany)
+lub możemy „zepchnąć” odpowiedzialność za obsługę wyjątku do „metody wyżej”.
+Obsługa:
+CarFactory factory = new CarFactory();
+Car myCar = null;
+try {
+    myCar = factory.createBrandNewCar("Ferrari");
+} catch (NoRecognizedCarException e) {
+    System.out.println(e.getMessage());
+}
+if(myCar != null) System.out.println(myCar);
+
+“Zepchnięcie wyżej” – do metody main:
+public static void main(String[] args) throws NoRecognizedCarException {
+
+    CarFactory factory = new CarFactory();
+    Car myCar = factory.createBrandNewCar("Ferrari");
+
+Info na koniec:
+Nadpisując metodę klasy bazowej w klasie pochodnej, należy pamiętać, że wyjątki kontrolowane deklarowane przez metodę w
+klasie pochodnej nie mogą być bardziej ogólne niż te w metodzie klasy bazowej (metoda podklasy może zgłaszać wyjątki bardziej
+szczegółowe lub nie zgłaszać żadnych).
+Jeśli metoda w klasie bazowej nie zgłasza żadnych wyjątków kontrolowanych to metoda klasy pochodnej również nie może tego robić.
+
+
+
+
+Podsumowanie:
+Kursantka musi znać:
+Spojrzeć na hierarchię wyjątków w Javie (poszukać sobie obrazka w sieci)
+•	Wszystkie wyjątki są potomkami klasy  Throwable. Hierarchia tych potomków dzieli się na typy Error oraz Exception.
+•	Klasy dziedziczące po Error: odpowiadają błędom wewnętrznym i wyczerpaniu zasobów w środowisku uruchomieniowym
+(StackOverflowError, OutOfMemoryError), nie wyrzuca się tych błędów poprzez instrukcję throw oraz się ich nie obsługuje.
+Występują one rzadko.
+•	Klasy dziedziczące po Exception: dzielą się na RuntimeException (wyjątki wykonawcze (nie powinno się ich obsługiwać),
+związane z wykonywaniem np. NullPointerException, ClassCastException, ArrayIndexOutOfBoundException.:), oraz pozostałe.
+ Ogólna zasada mówi: wyjątek RuntimeException oraz wyjątki dziedziczące po nim są spowodowane przez błędy programisty.
+ Wszystkie pozostałe wyjątki dziedziczące po Exception mają związek z innymi niepożądanymi zdarzeniami np. błędy wejścia-wyjścia,
+  które mogą wystąpić w prawidłowo zaimplementowanym programie.
+•	Klasyfikacja ze względu na kontrolowane/niekontrolowane (checked/unchecked):
+- Niekontrolowane: RuntimeException, Error i wszystkie dziedziczące po nich;
+- Kontrolowane: wszystkie pozostałe.
+•	Jak obsługiwać wyjątki (jak je przechwytywać) (try-catch);
+•	Jak zgłaszać wyjątki (throw new …);
+•	Jak tworzyć własne wyjątki oraz jak deklarować wyjątki kontrolowane w nagłówkach metod (throws…)
+•	Nadpisując metodę klasy bazowej w klasie pochodnej, należy pamiętać, że wyjątki kontrolowane deklarowane przez metodę
+w klasie pochodnej nie mogą być bardziej ogólne niż te w metodzie klasy bazowej (metoda podklasy może zgłaszać wyjątki bardziej
+szczegółowe lub nie zgłaszać żadnych).
+Jeśli metoda w klasie bazowej nie zgłasza żadnych wyjątków kontrolowanych to metoda klasy pochodnej również nie może tego robić.
+
+
+Praca domowa_1:
+Stwórz klasę SimpleLogger. Zadaniem tej klasy będzie logowanie wyjątków rzuconych w czasie wykonywania się programu
+(zastosuj program z pętlą do-while, który był robiony na zajęciach). - klasa ExceptionWhileRunner2
+Metoda logująca ma nazywać się log() i ma zapisywać wszystkie przechwycone wyjątki oraz datę i czas ich wystąpienia
+(pole typu Timestamp oraz metoda Instant.now()).
+Klasa musi posiadać również metodę, która wyświetli nam w czytelny sposób jakie wyjątki przechwyciła metoda log() –
+wyjątki mogą się powtarzać.
+Timestamp.from(Instant.now()); (timestamp z pakietu sql)
+2021-06-03 12:01:26.1103335 // java.lang.ArrayIndexOutOfBoundException // [treść wiadomości wyjątku jeżeli istnieje]
+
+
+
