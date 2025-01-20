@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class ExceptionWhileRunner2 {
     public static void main(String[] args) {
-        SimpleLogger logger = new SimpleLogger();
+        SimpleLogger logger = new SimpleLogger(10);
 
         String[] names = {"Adam", "Ewa", "Kazmierz"};
 
@@ -39,6 +39,8 @@ public class ExceptionWhileRunner2 {
 
 
         scanner.close();
-        logger.printLogs();
+        System.out.println();
+        System.out.println("Przechwycone wyjątki:");
+        logger.showLogs();
     }
 }
