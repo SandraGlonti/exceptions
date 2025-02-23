@@ -13,9 +13,7 @@ public class ContactList {
     private Scanner scanner = new Scanner(System.in);
 
     public void addContact() {
-        if (contactCounter >= contacts.length) {
-            expandContactList();
-        }
+        ensureArrayCapacity();
         try {
             System.out.println("Podaj Imię:");
             String name = scanner.nextLine();
@@ -106,11 +104,7 @@ public class ContactList {
         }
     }
 
-    public void expandContactList() {
-        Contact[] newContacts = new Contact[contacts.length + contacts.length / 2];
-        System.arraycopy(contacts, 0, newContacts, 0, contacts.length);
-        contacts = newContacts;
-    }
+
     public void menu(){
         int choice;
         do{
@@ -149,5 +143,13 @@ public class ContactList {
             }
         }while (choice != 0);
         scanner.close();
+    }
+
+    private void ensureArrayCapacity() {
+        if (contactCounter >= contacts.length) {
+            Contact[] newContacts = new Contact[contacts.length + contacts.length / 2];
+            System.arraycopy(contacts, 0, newContacts, 0, contacts.length);
+            contacts = newContacts;
+        }
     }
 }

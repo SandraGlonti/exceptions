@@ -11,9 +11,7 @@ public class Library {
     private Scanner scanner = new Scanner(System.in);
 
     public void addBook() {
-        if (bookCounter >= books.length) {
-            expandLibrary();
-        }
+        ensureArrayCapacity();
         try {
             System.out.println("Podaj tytuł: ");
             String title = scanner.nextLine();
@@ -85,12 +83,6 @@ public class Library {
     }
 
 
-    public void expandLibrary() {
-        Book[] newBooks = new Book[books.length + books.length / 2];
-        System.arraycopy(books, 0, newBooks, 0, books.length);
-        books = newBooks;
-    }
-
     public void menu(){
         int choice;
         do{
@@ -126,6 +118,15 @@ public class Library {
             }
         }while (choice != 0);
         scanner.close();
+    }
+
+    private void ensureArrayCapacity() {
+        if (bookCounter >= books.length) {
+            Book[] newBooks = new Book[books.length + books.length / 2];
+            System.arraycopy(books, 0, newBooks, 0, books.length);
+            books = newBooks;
+        }
+
     }
 
 }
